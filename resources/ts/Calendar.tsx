@@ -1,5 +1,9 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import axios from 'axios';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 function Calendar() {
     const [year, setYear] = useState(new Date().getFullYear());
@@ -58,6 +62,16 @@ function Calendar() {
         })
     );
 
+    const[open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+    }
+
     return (
         <Fragment>
             <div className="calendar-header">
@@ -83,7 +97,7 @@ function Calendar() {
                     {Calendar.map((week: number[], i: number) => (
                         <tr key={week.join('')}>
                             {week.map((day: number, j: number) => (
-                                <td key={`${i}${j}`} id={day.toString()} >
+                                <td key={`${i}${j}`} id={day.toString()} onClick={handleClickOpen} >
                                     <div>
                                         <div>
                                             {day > last ? day - last : day <= 0 ? prevLast + day : day}
@@ -91,7 +105,7 @@ function Calendar() {
                                         <div className="schedule-area">
                                             {rows.map((schedules, k) => (
                                                 schedules.sch_date === year + '-' + zeroPadding(month) + '-' + zeroPadding(day) &&
-                                                <div className='schedule-title' key={k} id={String(schedules.id)}>{schedules.sch_contents}</div>
+                                                <div className='schedule-title' key={k} id={schedules.id.toString()}>{schedules.sch_contents}</div>
                                             ))}
                                         </div>
                                     </div>
@@ -101,6 +115,15 @@ function Calendar() {
                     ))}
                 </tbody>
             </table>
+
+            <Dialog onClose={handleClose} open={open}>
+                <DialogTitle>Subscribe</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        スケジュール登録
+                    </DialogContentText>
+                </DialogContent>
+            </Dialog>
         </Fragment>
     );
 

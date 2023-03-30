@@ -15,5 +15,10 @@
         "sass": "^1.60.0",
         "typescript": "^5.0.2",
         "vite": "^4.0.0"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.10.6",
+        "@emotion/styled": "^11.10.6",
+        "@mui/material": "^5.11.15"
     }
 }
