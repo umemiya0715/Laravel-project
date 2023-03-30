@@ -51,6 +51,27 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+    pma:
+        image: 'phpmyadmin/phpmyadmin'
+        ports:
+            - '${PMA_PORT:-8080}:80'
+        environment:
+            PMA_USER: '${DB_USERNAME}'
+            PMA_PASSWORD: '${DB_PASSWORD}'
+            PMA_HOST: mysql
+        volumes:
+            - 'sail-mysql:/var/lib/mysql'
+            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
     redis:
         image: 'redis:alpine'
         ports:
