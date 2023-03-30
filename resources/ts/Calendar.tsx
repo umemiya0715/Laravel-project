@@ -1,4 +1,5 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
+import axios from 'axios';
 
 function Calendar() {
     const [year, setYear] = useState(new Date().getFullYear());
@@ -19,6 +20,43 @@ function Calendar() {
             setMonth(nextMonth);
         }
     };
+
+    interface Schedule {
+        id: number,
+        sch_category: string,
+        sch_contents: string,
+        sch_date: string,
+        sch_time: string,
+    };
+
+    const [schedules, setSchedules] = useState<Schedule[]>([]);
+
+    useEffect(() => {
+        getPostData();
+    }, []);
+
+    const getPostData = () => {
+        axios
+            .post<Schedule[]>('/api/posts')
+            .then((response) => {
+                setSchedules(response.data);
+                console.log(response.data);
+            }).catch(() => {
+                console.log('通信に失敗しました');
+            });
+    };
+
+    let rows: Schedule[] = [];
+
+    schedules.map((post) =>
+        rows.push({
+            id: post.id,
+            sch_category: post.sch_category,
+            sch_contents: post.sch_contents,
+            sch_date: post.sch_date,
+            sch_time: post.sch_time,
+        })
+    );
 
     return (
         <Fragment>
@@ -50,7 +88,12 @@ function Calendar() {
                                         <div>
                                             {day > last ? day - last : day <= 0 ? prevLast + day : day}
                                         </div>
-                                        <div className="schedule-area"></div>
+                                        <div className="schedule-area">
+                                            {rows.map((schedules, k) => (
+                                                schedules.sch_date === year + '-' + zeroPadding(month) + '-' + zeroPadding(day) &&
+                                                <div className='schedule-title' key={k} id={String(schedules.id)}>{schedules.sch_contents}</div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </td>
                             ))}
@@ -70,6 +113,10 @@ function Calendar() {
                 return day - first
             })
         })
+    }
+
+    function zeroPadding(num: number) {
+        return('0' + num).slice(-2);
     }
 }
 
