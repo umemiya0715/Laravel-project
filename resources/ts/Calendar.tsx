@@ -147,6 +147,64 @@ function Calendar() {
         }
     };
 
+    const[editOpen, setEditOpen] = useState(false);
+
+    const[editData, setEditData] = useState({id:'', sch_category:'', sch_contents:'', sch_date:'', sch_hour:'', sch_min:''});
+
+    function getEditData(e) {
+        axios.post('/api/edit', {
+            id: e.currentTarget.id
+        })
+        .then(res => {
+            setEditData({
+                id: res.data.id,
+                sch_category: res.data.sch_category,
+                sch_contents: res.data.sch_contents,
+                sch_date: res.data.sch_date,
+                sch_hour: res.data.sch_time.substr(0,2),
+                sch_min: res.data.sch_time.substr(3,2),
+            });
+        })
+        .catch(() => {
+            console.log('通信に失敗しました');
+        })
+    }
+
+    const editHandleClickOpen = (e) => {
+        e.stopPropagation();
+        setEditOpen(true);
+        getEditData(e);
+    }
+
+    const handleEditClose = () => {
+        setEditOpen(false);
+    }
+
+    const editChange = (e) => {
+        const key = e.target.name;
+        const value = e.target.value;
+        editData[key] = value;
+        let data = Object.assign({}, editData);
+        setEditData(data);
+    }
+
+    const updateSchedule = async(e) => {
+        e.preventDefault()
+        await axios.post('/api/update', {
+            id: editData.id,
+            sch_category: editData.sch_category,
+            sch_contents: editData.sch_contents,
+            sch_date: editData.sch_date,
+            sch_time: editData.sch_hour + ':' + editData.sch_min
+        })
+        .then((res) => {
+            setEditData(res.data);
+        })
+        .catch(error => {
+            console.log(error);
+        })
+    }
+
     return (
         <Fragment>
             <div className="calendar-header">
@@ -180,7 +238,7 @@ function Calendar() {
                                         <div className="schedule-area">
                                             {rows.map((schedules, k) => (
                                                 schedules.sch_date === year + '-' + zeroPadding(month) + '-' + zeroPadding(day) &&
-                                                <div className='schedule-title' key={k} id={schedules.id.toString()}>{schedules.sch_contents}</div>
+                                                <div className='schedule-title' key={k} onClick={editHandleClickOpen}>{schedules.sch_contents}</div>
                                             ))}
                                         </div>
                                     </div>
@@ -218,6 +276,36 @@ function Calendar() {
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button href="/dashboard" onClick={createSchedule}>Schedule</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog onClose={handleClose} open={editOpen}>
+                <DialogTitle>Subscribe</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        スケジュール更新
+                    </DialogContentText>
+                    <TextField margin="dense" id="sch_date" name="sch_date" label="予定日" type="text" fullWidth variant="standard" value={editData.sch_date} onChange={editChange}/>
+                    <InputLabel id="sch_time_label">時刻</InputLabel>
+                    <Select labelId="sch_hour" id="sch_hour_select" name="sch_hour" label="Hour" variant="standard" value={editData.sch_hour} onChange={editChange}>
+                        <MenuItem value="00">00</MenuItem>
+                        <MenuItem value="01">01</MenuItem>
+                    </Select>
+                    <Select labelId="sch_min" id="sch_min_select" name="sch_min" label="Min" variant="standard" value={editData.sch_min} onChange={editChange}>
+                        <MenuItem value="00">00</MenuItem>
+                        <MenuItem value="01">01</MenuItem>
+                    </Select>
+                    <InputLabel id="sch_category">カテゴリー</InputLabel>
+                    <Select labelId="sch_category" id="sch_category_select" name="sch_category" label="Category" variant="standard" value={editData.sch_category} onChange={editChange}>
+                        <MenuItem value="勉強">勉強</MenuItem>
+                        <MenuItem value="案件">案件</MenuItem>
+                        <MenuItem value="テスト">テスト</MenuItem>
+                    </Select>
+                    <TextField margin="dense" id="sch_contents" name="sch_contents" label="内容" type="text" fullWidth variant="standard" value={editData.sch_contents} onChange={editChange}/>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleEditClose}>Cancel</Button>
+                    <Button href="/dashboard" onClick={updateSchedule}>Subscribe</Button>
                 </DialogActions>
             </Dialog>
         </Fragment>
