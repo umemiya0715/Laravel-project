@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React, { Fragment, useState, useEffect, ChangeEvent } from 'react';
 import axios from 'axios';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -10,6 +10,7 @@ import Button from '@mui/material/Button';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import { SelectChangeEvent } from "@mui/material";
 
 function Calendar() {
     const [year, setYear] = useState(new Date().getFullYear());
@@ -96,11 +97,26 @@ function Calendar() {
         sch_min: string,
     }
 
-    const [formData, setFormData] = useState<formData[]>([]);
+    const [formData, setFormData] = useState<formData>({
+        id: 0,
+        sch_category: "",
+        sch_contents: "",
+        sch_date: "",
+        sch_hour: "",
+        sch_min: "",
+    });
 
     const [post, setPosts] = useState<Post[]>([]);
 
-    const inputChange = (e) => {
+    const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const key = e.target.name;
+        const value = e.target.value;
+        const data = { ...formData, [key]: value };
+        setFormData(data);
+        console.log(data);
+    }
+
+    const handleSelectChange = (e: SelectChangeEvent<string>) => {
         const key = e.target.name;
         const value = e.target.value;
         const data = { ...formData, [key]: value };
@@ -181,23 +197,23 @@ function Calendar() {
                     <DialogContentText>
                         スケジュール登録
                     </DialogContentText>
-                    <TextField margin="dense" id="sch_date" name="sch_date" label="予定日" type="text" fullWidth variant="standard" onChange={inputChange}/>
+                    <TextField margin="dense" id="sch_date" name="sch_date" label="予定日" type="text" fullWidth variant="standard" onChange={handleTextChange}/>
                     <InputLabel id="sch_time_label">時刻</InputLabel>
-                        <Select labelId="sch_hour" id="sch_hour_select" name="sch_hour" label="Hour" variant="standard" defaultValue="00" onChange={inputChange}>
+                        <Select labelId="sch_hour" id="sch_hour_select" name="sch_hour" label="Hour" variant="standard" defaultValue="00" onChange={handleSelectChange}>
                             <MenuItem value="00">00</MenuItem>
                             <MenuItem value="01">01</MenuItem>
                         </Select>
-                        <Select labelId="sch_min" id="sch_min_select" name="sch_min" label="Min" variant="standard" defaultValue="00" onChange={inputChange}>
+                        <Select labelId="sch_min" id="sch_min_select" name="sch_min" label="Min" variant="standard" defaultValue="00" onChange={handleSelectChange}>
                             <MenuItem value="00">00</MenuItem>
                             <MenuItem value="01">01</MenuItem>
                         </Select>
                     <InputLabel id="sch_category_label">カテゴリー</InputLabel>
-                    <Select labelId="sch_category" id="sch_category_select" name="sch_category" label="Category" variant="standard" defaultValue="勉強" onChange={inputChange}>
+                    <Select labelId="sch_category" id="sch_category_select" name="sch_category" label="Category" variant="standard" defaultValue="勉強" onChange={handleSelectChange}>
                         <MenuItem value="勉強">勉強</MenuItem>
                         <MenuItem value="案件">案件</MenuItem>
                         <MenuItem value="テスト">テスト</MenuItem>
                     </Select>
-                <TextField margin="dense" id="sch_contents" name="sch_contents" label="内容" type="text" fullWidth variant="standard" onChange={inputChange}/>
+                <TextField margin="dense" id="sch_contents" name="sch_contents" label="内容" type="text" fullWidth variant="standard" onChange={handleTextChange}/>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
