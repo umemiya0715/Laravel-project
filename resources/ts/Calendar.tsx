@@ -11,6 +11,7 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import { SelectChangeEvent } from "@mui/material";
+import CreateDialog from './CreateDialog';
 
 function Calendar() {
     const [year, setYear] = useState(new Date().getFullYear());
@@ -73,11 +74,11 @@ function Calendar() {
 
     const handleClickOpen = () => {
         setOpen(true);
-    }
+    };
 
     const handleClose = () => {
         setOpen(false);
-    }
+    };
 
     interface formData {
         id: number,
@@ -88,14 +89,6 @@ function Calendar() {
         sch_min: string,
     };
 
-    interface Post {
-        id: number,
-        sch_category: string,
-        sch_contents: string,
-        sch_date: string,
-        sch_hour: string,
-        sch_min: string,
-    }
 
     const [formData, setFormData] = useState<formData>({
         id: 0,
@@ -106,23 +99,32 @@ function Calendar() {
         sch_min: "",
     });
 
+    interface Post {
+        id: number,
+        sch_category: string,
+        sch_contents: string,
+        sch_date: string,
+        sch_hour: string,
+        sch_min: string,
+    };
+
     const [post, setPosts] = useState<Post[]>([]);
 
     const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const key = e.target.name;
         const value = e.target.value;
         const data = { ...formData, [key]: value };
-        setFormData(data);
+        setFormData({ ...data });
         console.log(data);
-    }
+    };
 
     const handleSelectChange = (e: SelectChangeEvent<string>) => {
         const key = e.target.name;
         const value = e.target.value;
         const data = { ...formData, [key]: value };
-        setFormData(data);
+        setFormData({ ...data });
         console.log(data);
-    }
+    };
 
     const createSchedule = async() => {
         try {
@@ -147,16 +149,32 @@ function Calendar() {
         }
     };
 
+    interface editFormData {
+        id: number,
+        sch_category: string,
+        sch_contents: string,
+        sch_date: string,
+        sch_hour: string,
+        sch_min: string,
+    };
+
+    const[editFormData, setEditFormData] = useState<editFormData>({
+        id: 0,
+        sch_category: "",
+        sch_contents: "",
+        sch_date: "",
+        sch_hour: "",
+        sch_min: "",
+    });
+
     const[editOpen, setEditOpen] = useState(false);
 
-    const[editData, setEditData] = useState({id:'', sch_category:'', sch_contents:'', sch_date:'', sch_hour:'', sch_min:''});
-
-    function getEditData(e) {
+    function getEditData(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         axios.post('/api/edit', {
             id: e.currentTarget.id
         })
         .then(res => {
-            setEditData({
+            setEditFormData({
                 id: res.data.id,
                 sch_category: res.data.sch_category,
                 sch_contents: res.data.sch_contents,
@@ -168,42 +186,49 @@ function Calendar() {
         .catch(() => {
             console.log('通信に失敗しました');
         })
-    }
+    };
 
-    const editHandleClickOpen = (e) => {
-        e.stopPropagation();
+    const editHandleClickOpen = (schedules: Schedule, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         setEditOpen(true);
         getEditData(e);
-    }
+    };
 
     const handleEditClose = () => {
         setEditOpen(false);
-    }
+    };
 
-    const editChange = (e) => {
+    const handleEditTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const key = e.target.name;
         const value = e.target.value;
-        editData[key] = value;
-        let data = Object.assign({}, editData);
-        setEditData(data);
-    }
+        const data = { ...editFormData, [key]: value };
+        setEditFormData({ ...data});
+        console.log(data);
+    };
 
-    const updateSchedule = async(e) => {
+    const handleEditSelectChange = (e: SelectChangeEvent<string>) => {
+        const key = e.target.name;
+        const value = e.target.value;
+        const data = { ...editFormData, [key]: value };
+        setEditFormData({ ...data});
+        console.log(data);
+    };
+
+    const updateSchedule = async(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault()
         await axios.post('/api/update', {
-            id: editData.id,
-            sch_category: editData.sch_category,
-            sch_contents: editData.sch_contents,
-            sch_date: editData.sch_date,
-            sch_time: editData.sch_hour + ':' + editData.sch_min
+            id: editFormData.id,
+            sch_category: editFormData.sch_category,
+            sch_contents: editFormData.sch_contents,
+            sch_date: editFormData.sch_date,
+            sch_time: editFormData.sch_hour + ':' + editFormData.sch_min
         })
         .then((res) => {
-            setEditData(res.data);
+            setEditFormData(res.data);
         })
         .catch(error => {
             console.log(error);
         })
-    }
+    };
 
     return (
         <Fragment>
@@ -232,15 +257,19 @@ function Calendar() {
                             {week.map((day: number, j: number) => (
                                 <td key={`${i}${j}`} id={day.toString()} onClick={handleClickOpen} >
                                     <div>
-                                        <div>
-                                            {day > last ? day - last : day <= 0 ? prevLast + day : day}
-                                        </div>
-                                        <div className="schedule-area">
-                                            {rows.map((schedules, k) => (
-                                                schedules.sch_date === year + '-' + zeroPadding(month) + '-' + zeroPadding(day) &&
-                                                <div className='schedule-title' key={k} onClick={editHandleClickOpen}>{schedules.sch_contents}</div>
-                                            ))}
-                                        </div>
+                                        {day > last ? day - last : day <= 0 ? prevLast + day : day}
+                                    </div>
+                                    <div className="schedule-area">
+                                        {rows.map((schedules, k) => (
+                                            schedules.sch_date === year + '-' + zeroPadding(month) + '-' + zeroPadding(day) &&
+                                            <div className='schedule-title' key={k} onClick={(e) => {
+                                                e.stopPropagation();
+                                                editHandleClickOpen(schedules, e);
+                                            }}
+                                            >
+                                                {schedules.sch_contents}
+                                            </div>
+                                        ))}
                                     </div>
                                 </td>
                             ))}
@@ -249,6 +278,7 @@ function Calendar() {
                 </tbody>
             </table>
 
+            {/* <CreateDialog open={open}/> */}
             <Dialog onClose={handleClose} open={open}>
                 <DialogTitle>Subscribe</DialogTitle>
                 <DialogContent>
@@ -285,23 +315,23 @@ function Calendar() {
                     <DialogContentText>
                         スケジュール更新
                     </DialogContentText>
-                    <TextField margin="dense" id="sch_date" name="sch_date" label="予定日" type="text" fullWidth variant="standard" value={editData.sch_date} onChange={editChange}/>
+                    <TextField margin="dense" id="sch_date" name="sch_date" label="予定日" type="text" fullWidth variant="standard" value={editFormData.sch_date} onChange={handleEditTextChange}/>
                     <InputLabel id="sch_time_label">時刻</InputLabel>
-                    <Select labelId="sch_hour" id="sch_hour_select" name="sch_hour" label="Hour" variant="standard" value={editData.sch_hour} onChange={editChange}>
+                    <Select labelId="sch_hour" id="sch_hour_select" name="sch_hour" label="Hour" variant="standard" value={editFormData.sch_hour} onChange={handleEditSelectChange}>
                         <MenuItem value="00">00</MenuItem>
                         <MenuItem value="01">01</MenuItem>
                     </Select>
-                    <Select labelId="sch_min" id="sch_min_select" name="sch_min" label="Min" variant="standard" value={editData.sch_min} onChange={editChange}>
+                    <Select labelId="sch_min" id="sch_min_select" name="sch_min" label="Min" variant="standard" value={editFormData.sch_min} onChange={handleEditSelectChange}>
                         <MenuItem value="00">00</MenuItem>
                         <MenuItem value="01">01</MenuItem>
                     </Select>
                     <InputLabel id="sch_category">カテゴリー</InputLabel>
-                    <Select labelId="sch_category" id="sch_category_select" name="sch_category" label="Category" variant="standard" value={editData.sch_category} onChange={editChange}>
+                    <Select labelId="sch_category" id="sch_category_select" name="sch_category" label="Category" variant="standard" value={editFormData.sch_category} onChange={handleEditSelectChange}>
                         <MenuItem value="勉強">勉強</MenuItem>
                         <MenuItem value="案件">案件</MenuItem>
                         <MenuItem value="テスト">テスト</MenuItem>
                     </Select>
-                    <TextField margin="dense" id="sch_contents" name="sch_contents" label="内容" type="text" fullWidth variant="standard" value={editData.sch_contents} onChange={editChange}/>
+                    <TextField margin="dense" id="sch_contents" name="sch_contents" label="内容" type="text" fullWidth variant="standard" value={editFormData.sch_contents} onChange={handleEditTextChange}/>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleEditClose}>Cancel</Button>
@@ -320,11 +350,11 @@ function Calendar() {
                 return day - first
             })
         })
-    }
+    };
 
     function zeroPadding(num: number) {
         return('0' + num).slice(-2);
-    }
+    };
 }
 
 export default Calendar;
